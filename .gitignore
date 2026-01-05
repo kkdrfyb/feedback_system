@@ -1,0 +1,22 @@
+# Python 虚拟环境与缓存
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Node.js 依赖与构建输出
+node_modules/
+frontend/dist/
+
+# 本地数据库与敏感文件
+backend/feedback.db
+.env
+.DS_Store
+
+# 测试缓存
+.pytest_cache/
+.coverage        # 测试覆盖率报告文件
+htmlcov/         # 覆盖率报告的HTML文件夹
+.pytest_log/     # 测试日志文件夹（若有）
+test-results/    # 测试结果输出文件夹（自定义）
