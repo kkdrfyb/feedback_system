@@ -272,9 +272,6 @@ const resetFilters = () => {
     display: flex;
     justify-content: flex-end;
 }
-/* ... existing styles ... */
-
-<style scoped>
 .page-container {
   max-width: 1200px;
   margin: 0 auto;

@@ -104,7 +104,7 @@ const attachmentsList = computed(() => {
 })
 
 const getDownloadUrl = (path) => {
-    // path is like /api/uploads/xxx.pdf
+    // path is like /uploads/xxx.pdf
     // we need full url
     return `${window.location.protocol}//${window.location.hostname}:8000${path}`
 }
