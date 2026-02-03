@@ -1,17 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
 import json
 import os
 import shutil
 try:
     from .. import models, schemas
     from ..database import get_db
+    from ..auth import get_current_user
 except (ImportError, ValueError):
     import models, schemas
     from database import get_db
+    from auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 """
 Items Router
@@ -40,13 +43,16 @@ def read_items(
     created_to: Optional[str] = None,
     deadline_from: Optional[str] = None,
     deadline_to: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
     # 作用域过滤与综合搜索
     # - scope: all | mine_created | mine_assigned
     # - 支持发起人/参与人（ID 或名称模糊）、标题、状态、发起/截止日期范围
     # - 服务端分页与排序（title/created_at/deadline/status）
     query = db.query(models.Item)
+    role = current_user.role
+    user_id = current_user.id
     if role != "admin":
         if scope == "mine_created" and user_id is not None:
             query = query.filter(models.Item.creator_id == user_id)
@@ -81,7 +87,6 @@ def read_items(
         query = query.filter(models.Item.title.like(f"%{title_like}%"))
     if status:
         query = query.filter(models.Item.status == status)
-    from datetime import datetime
     if created_from:
         dt = datetime.strptime(created_from, "%Y-%m-%d")
         query = query.filter(models.Item.created_at >= dt)
@@ -162,10 +167,10 @@ async def create_item(
     if files:
         for file in files:
             if not file.filename: continue
-            file_path = f"uploads/{file.filename}"
+            file_path = os.path.join("uploads", file.filename)
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
-            attachment_list.append({"name": file.filename, "path": f"/api/{file_path}"})
+            attachment_list.append({"name": file.filename, "path": f"/{file_path}"})
     
     # 解析 user_ids
     u_ids = json.loads(user_ids)
@@ -173,7 +178,7 @@ async def create_item(
     db_item = models.Item(
         title=title,
         description=description,
-        deadline=models.datetime.strptime(deadline, "%Y-%m-%d %H:%M:%S"),
+        deadline=datetime.strptime(deadline, "%Y-%m-%d %H:%M:%S"),
         must_feedback=must_feedback,
         creator_id=creator_id,
         status="ongoing",
@@ -218,9 +223,8 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
 @router.get("/items/stats/summary")
 def get_stats_summary(
     scope: str = "all",
-    user_id: Optional[int] = None,
-    role: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
     """
     获取统计概览数据
@@ -234,6 +238,8 @@ def get_stats_summary(
     - 所有聚合在 SQL 层完成，保证大数据下的性能
     """
     base_query = db.query(models.Item)
+    role = current_user.role
+    user_id = current_user.id
     if role != "admin":
         if scope == "mine_created" and user_id is not None:
             base_query = base_query.filter(models.Item.creator_id == user_id)

@@ -14,8 +14,11 @@ import GroupManagement from '../views/GroupManagement.vue'
 const routes = [
     { path: '/login', component: Login },
     { path: '/', component: Dashboard },
+    { path: '/items', component: Dashboard },
     { path: '/item/create', component: ItemCreate },
+    { path: '/items/create', component: ItemCreate },
     { path: '/item/detail/:id', component: ItemDetail },
+    { path: '/items/:id', component: ItemDetail },
     { path: '/feedback/:itemId', component: Feedback },
     { path: '/todo', component: Todo },
     { path: '/stats', component: DataStats },

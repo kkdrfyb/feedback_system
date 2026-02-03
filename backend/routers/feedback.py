@@ -5,11 +5,50 @@ from datetime import datetime, timezone
 try:
     from .. import models, schemas
     from ..database import get_db
+    from ..auth import get_current_user
 except (ImportError, ValueError):
     import models, schemas
     from database import get_db
+    from auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
+
+@router.get("/items/{item_id}/feedbacks")
+def get_item_feedbacks(item_id: int, db: Session = Depends(get_db)):
+    results = db.query(models.ItemUser, models.User, models.Feedback)\
+        .join(models.User, models.ItemUser.user_id == models.User.id)\
+        .outerjoin(models.Feedback, models.Feedback.item_user_id == models.ItemUser.id)\
+        .filter(models.ItemUser.item_id == item_id)\
+        .all()
+    feedbacks = []
+    for iu, user, fb in results:
+        feedbacks.append({
+            "item_user_id": iu.id,
+            "user_id": user.id,
+            "user_name": user.name,
+            "content": fb.content if fb else None,
+            "status": iu.feedback_status,
+            "last_feedback_time": iu.last_feedback_time,
+            "created_at": fb.created_at if fb else None,
+            "updated_at": fb.updated_at if fb else None
+        })
+    return {"item_id": item_id, "feedbacks": feedbacks}
+
+@router.post("/items/{item_id}/feedbacks", response_model=schemas.Feedback)
+def create_item_feedback(
+    item_id: int,
+    payload: schemas.FeedbackForItemCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    user_id = payload.user_id or current_user.id
+    item_user = db.query(models.ItemUser)\
+        .filter(models.ItemUser.item_id == item_id, models.ItemUser.user_id == user_id)\
+        .first()
+    if not item_user:
+        raise HTTPException(status_code=404, detail="Item assignment not found")
+    feedback = schemas.FeedbackCreate(item_user_id=item_user.id, content=payload.content)
+    return create_feedback(feedback, db)
 
 @router.get("/feedbacks", response_model=List[schemas.Feedback])
 def get_feedbacks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -41,6 +80,17 @@ def create_feedback(feedback: schemas.FeedbackCreate, db: Session = Depends(get_
             if item:
                 item.status = "finished"
 
+    db.commit()
+    db.refresh(db_feedback)
+    return db_feedback
+
+@router.put("/feedbacks/{feedback_id}", response_model=schemas.Feedback)
+def update_feedback(feedback_id: int, payload: schemas.FeedbackBase, db: Session = Depends(get_db)):
+    db_feedback = db.query(models.Feedback).filter(models.Feedback.id == feedback_id).first()
+    if not db_feedback:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    db_feedback.content = payload.content
+    db_feedback.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(db_feedback)
     return db_feedback
