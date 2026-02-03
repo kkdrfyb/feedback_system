@@ -24,6 +24,7 @@ pip install -r requirements.txt
 python -m uvicorn backend.main:app --reload
 ```
 后端服务默认运行在 http://127.0.0.1:8000
+后端接口默认需要 Bearer Token 鉴权（通过 /api/login 获取）。
 
 - 数据库：首次启动会在 backend 目录下自动创建 SQLite 文件 feedback.db
 - 初始化用户（可选）：
@@ -47,12 +48,15 @@ npm run dev
 打开浏览器访问前端地址后登录使用。如果数据库为空，可先按“初始化用户”步骤准备账号。
 
 ## 5. 测试（可选）
-进入 backend 目录运行：
+在项目根目录运行：
 
 ```bash
 pytest -q
 ```
 用于验证基础 API 与认证逻辑是否正常。
+
+说明：
+- 已通过 pytest.ini 限定测试目录为 backend/tests，避免脚本被误收集。
 
 ## 6. 统计口径说明
 - 响应率按“已反馈的参与人 / 被分配的参与人”计算
