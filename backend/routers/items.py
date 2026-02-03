@@ -8,11 +8,13 @@ import shutil
 try:
     from .. import models, schemas
     from ..database import get_db
+    from ..auth import get_current_user
 except (ImportError, ValueError):
     import models, schemas
     from database import get_db
+    from auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 """
 Items Router

@@ -5,8 +5,18 @@ from backend import models
 def get_password_hash(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-def test_api_ping(client):
-    response = client.get("/api/items")
+def test_api_ping(client, db):
+    hashed_pw = get_password_hash("password123")
+    user = models.User(username="pinguser", name="测试用户", password_hash=hashed_pw, role="feedbacker")
+    db.add(user)
+    db.commit()
+
+    response = client.post("/api/login", json={"username": "pinguser", "password": "password123"})
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = client.get("/api/items", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, dict)
@@ -71,8 +81,10 @@ def test_item_workflow(client, db):
     # 4. 检查待办事项 (用户1登录)
     login_res_u1 = client.post("/api/login", json={"username": "u1", "password": "123"})
     u1_id = login_res_u1.json()["user_id"]
+    u1_token = login_res_u1.json()["access_token"]
+    u1_headers = {"Authorization": f"Bearer {u1_token}"}
     
-    res = client.get(f"/api/todos?user_id={u1_id}")
+    res = client.get(f"/api/todos?user_id={u1_id}", headers=u1_headers)
     assert res.status_code == 200
     assert len(res.json()) == 1
     assert res.json()[0]["title"] == "测试任务"
@@ -86,7 +98,7 @@ def test_item_workflow(client, db):
         "item_user_id": iu.id,
         "content": "反馈完成"
     }
-    res = client.post("/api/feedbacks", json=feedback_payload)
+    res = client.post("/api/feedbacks", json=feedback_payload, headers=u1_headers)
     assert res.status_code == 200
     
     # 6. 验证状态更新

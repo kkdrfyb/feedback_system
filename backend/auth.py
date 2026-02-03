@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from jose import jwt
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
@@ -16,6 +17,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 # pwd_context 移除，改用直接调用 bcrypt
 router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def verify_password(plain_password, hashed_password):
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -27,6 +29,19 @@ def authenticate_user(db: Session, username: str, password: str):
     user = db.query(models.User).filter(models.User.username==username).first()
     if not user: return False
     if not verify_password(password, user.password_hash): return False
+    return user
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
     return user
 
 @router.post("/login")

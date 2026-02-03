@@ -47,6 +47,9 @@ class PaginatedItems(BaseModel):
 class FeedbackBase(BaseModel):
     content: str
 
+class FeedbackForItemCreate(FeedbackBase):
+    user_id: int
+
 class FeedbackCreate(FeedbackBase):
     item_user_id: int
 
