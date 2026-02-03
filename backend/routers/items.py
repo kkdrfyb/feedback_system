@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
 import json
 import os
 import shutil
@@ -81,7 +82,6 @@ def read_items(
         query = query.filter(models.Item.title.like(f"%{title_like}%"))
     if status:
         query = query.filter(models.Item.status == status)
-    from datetime import datetime
     if created_from:
         dt = datetime.strptime(created_from, "%Y-%m-%d")
         query = query.filter(models.Item.created_at >= dt)
@@ -162,10 +162,10 @@ async def create_item(
     if files:
         for file in files:
             if not file.filename: continue
-            file_path = f"uploads/{file.filename}"
+            file_path = os.path.join("uploads", file.filename)
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
-            attachment_list.append({"name": file.filename, "path": f"/api/{file_path}"})
+            attachment_list.append({"name": file.filename, "path": f"/{file_path}"})
     
     # 解析 user_ids
     u_ids = json.loads(user_ids)
@@ -173,7 +173,7 @@ async def create_item(
     db_item = models.Item(
         title=title,
         description=description,
-        deadline=models.datetime.strptime(deadline, "%Y-%m-%d %H:%M:%S"),
+        deadline=datetime.strptime(deadline, "%Y-%m-%d %H:%M:%S"),
         must_feedback=must_feedback,
         creator_id=creator_id,
         status="ongoing",

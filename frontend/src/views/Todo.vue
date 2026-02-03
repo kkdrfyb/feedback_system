@@ -6,7 +6,12 @@
     </div>
 
     <div v-if="todos.length > 0" class="todo-list">
-      <el-card v-for="todo in todos" :key="todo.id" class="todo-item-card" @click="$router.push('/feedback/' + todo.id)">
+      <el-card
+        v-for="todo in todos"
+        :key="todo.id"
+        class="todo-item-card"
+        @click="$router.push(`/feedback/${todo.id}?item_user_id=${todo.item_user_id}`)"
+      >
         <div class="todo-content">
           <div class="todo-main">
             <h3 class="todo-title">{{ todo.title }}</h3>

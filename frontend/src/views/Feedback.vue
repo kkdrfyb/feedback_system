@@ -79,7 +79,7 @@ onMounted(async () => {
 async function submitFeedback() {
     try {
         // 后端需要 item_user_id，从获取到的事项中提取
-        const item_user_id = item.value.item_user_id 
+        const item_user_id = Number(route.query.item_user_id)
         await apiClient.post('/feedbacks', { 
             item_user_id: item_user_id, 
             content: content.value 
