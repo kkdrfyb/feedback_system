@@ -6,13 +6,13 @@ import io
 try:
     from ..database import get_db
     from .. import models, schemas
-    from ..auth import get_password_hash
+    from ..auth import get_password_hash, get_current_user
 except (ImportError, ValueError):
     from database import get_db
     import models, schemas
-    from auth import get_password_hash
+    from auth import get_password_hash, get_current_user
 
-router = APIRouter(tags=["groups"])
+router = APIRouter(tags=["groups"], dependencies=[Depends(get_current_user)])
 
 @router.post("/groups/sync_org")
 def sync_org_groups(db: Session = Depends(get_db)):
