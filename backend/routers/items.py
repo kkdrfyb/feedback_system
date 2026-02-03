@@ -43,13 +43,16 @@ def read_items(
     created_to: Optional[str] = None,
     deadline_from: Optional[str] = None,
     deadline_to: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
     # 作用域过滤与综合搜索
     # - scope: all | mine_created | mine_assigned
     # - 支持发起人/参与人（ID 或名称模糊）、标题、状态、发起/截止日期范围
     # - 服务端分页与排序（title/created_at/deadline/status）
     query = db.query(models.Item)
+    role = current_user.role
+    user_id = current_user.id
     if role != "admin":
         if scope == "mine_created" and user_id is not None:
             query = query.filter(models.Item.creator_id == user_id)
@@ -220,9 +223,8 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
 @router.get("/items/stats/summary")
 def get_stats_summary(
     scope: str = "all",
-    user_id: Optional[int] = None,
-    role: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
     """
     获取统计概览数据
@@ -236,6 +238,8 @@ def get_stats_summary(
     - 所有聚合在 SQL 层完成，保证大数据下的性能
     """
     base_query = db.query(models.Item)
+    role = current_user.role
+    user_id = current_user.id
     if role != "admin":
         if scope == "mine_created" and user_id is not None:
             base_query = base_query.filter(models.Item.creator_id == user_id)

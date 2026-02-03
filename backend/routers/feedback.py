@@ -35,9 +35,15 @@ def get_item_feedbacks(item_id: int, db: Session = Depends(get_db)):
     return {"item_id": item_id, "feedbacks": feedbacks}
 
 @router.post("/items/{item_id}/feedbacks", response_model=schemas.Feedback)
-def create_item_feedback(item_id: int, payload: schemas.FeedbackForItemCreate, db: Session = Depends(get_db)):
+def create_item_feedback(
+    item_id: int,
+    payload: schemas.FeedbackForItemCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    user_id = payload.user_id or current_user.id
     item_user = db.query(models.ItemUser)\
-        .filter(models.ItemUser.item_id == item_id, models.ItemUser.user_id == payload.user_id)\
+        .filter(models.ItemUser.item_id == item_id, models.ItemUser.user_id == user_id)\
         .first()
     if not item_user:
         raise HTTPException(status_code=404, detail="Item assignment not found")
