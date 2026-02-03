@@ -61,6 +61,9 @@
           </el-form-item>
           <el-form-item label="状态">
             <el-select v-model="statusFilter" placeholder="全部" clearable style="width: 140px">
+              <el-option label="草稿" value="draft" />
+              <el-option label="收集中" value="collecting" />
+              <el-option label="已关闭" value="closed" />
               <el-option label="进行中" value="ongoing" />
               <el-option label="已完成" value="finished" />
             </el-select>
@@ -117,8 +120,8 @@
         </el-table-column>
         <el-table-column prop="status" label="状态" width="120" sortable="custom">
           <template #default="scope">
-            <el-tag :type="scope.row.status === 'ongoing' ? 'warning' : 'success'" effect="light" class="status-tag">
-              {{ scope.row.status === 'ongoing' ? '进行中' : '已完成' }}
+            <el-tag :type="getStatusType(scope.row.status)" effect="light" class="status-tag">
+              {{ getStatusLabel(scope.row.status) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -264,6 +267,25 @@ const resetFilters = () => {
     fetchStats()
     fetchItems()
 }
+
+const statusLabels = {
+    draft: '草稿',
+    collecting: '收集中',
+    closed: '已关闭',
+    ongoing: '进行中',
+    finished: '已完成'
+}
+
+const statusTypes = {
+    draft: 'info',
+    collecting: 'warning',
+    closed: 'info',
+    ongoing: 'warning',
+    finished: 'success'
+}
+
+const getStatusLabel = (status) => statusLabels[status] || status || '-'
+const getStatusType = (status) => statusTypes[status] || 'info'
 </script>
 
 <style scoped>
@@ -272,9 +294,6 @@ const resetFilters = () => {
     display: flex;
     justify-content: flex-end;
 }
-/* ... existing styles ... */
-
-<style scoped>
 .page-container {
   max-width: 1200px;
   margin: 0 auto;

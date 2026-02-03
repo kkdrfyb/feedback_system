@@ -8,7 +8,7 @@
       <div class="header-main">
         <h1 class="item-title">{{ item.title }}</h1>
         <div class="status-badge" :class="item.status">
-          {{ item.status === 'ongoing' ? '进行中' : '已归档' }}
+          {{ getStatusLabel(item.status) }}
         </div>
       </div>
       <p class="item-desc">{{ item.description || '暂无详细描述' }}</p>
@@ -104,7 +104,7 @@ const attachmentsList = computed(() => {
 })
 
 const getDownloadUrl = (path) => {
-    // path is like /api/uploads/xxx.pdf
+    // path is like /uploads/xxx.pdf
     // we need full url
     return `${window.location.protocol}//${window.location.hostname}:8000${path}`
 }
@@ -162,6 +162,16 @@ const formatTime = (time) => time ? time.replace('T', ' ').split('.')[0] : '-'
 function exportData() {
     alert("导出功能开发中...")
 }
+
+const statusLabels = {
+    draft: '草稿',
+    collecting: '收集中',
+    closed: '已关闭',
+    ongoing: '进行中',
+    finished: '已归档'
+}
+
+const getStatusLabel = (status) => statusLabels[status] || status || '-'
 </script>
 
 <style scoped>
@@ -206,6 +216,9 @@ function exportData() {
 
 .status-badge.ongoing { background: rgba(var(--primary), 0.1); color: rgb(var(--primary)); }
 .status-badge.finished { background: rgba(103, 194, 58, 0.1); color: #67c23a; }
+.status-badge.collecting { background: rgba(var(--primary), 0.1); color: rgb(var(--primary)); }
+.status-badge.draft { background: rgba(148, 163, 184, 0.2); color: #64748b; }
+.status-badge.closed { background: rgba(148, 163, 184, 0.2); color: #64748b; }
 
 .item-desc {
   font-size: 1rem;
