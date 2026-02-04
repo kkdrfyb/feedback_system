@@ -55,7 +55,7 @@ def login(login_data: schemas.UserLogin, db: Session = Depends(get_db)):
     db.add(log); db.commit()
     return {"access_token": token, "token_type": "bearer", "role": user.role, "user_id": user.id, "name": user.name}
 
-@router.get("/users")
+@router.get("/users", response_model=list[schemas.User])
 def list_users(db: Session = Depends(get_db)):
     return db.query(models.User).all()
 

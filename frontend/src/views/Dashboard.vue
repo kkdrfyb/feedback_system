@@ -61,9 +61,6 @@
           </el-form-item>
           <el-form-item label="状态">
             <el-select v-model="statusFilter" placeholder="全部" clearable style="width: 140px">
-              <el-option label="草稿" value="draft" />
-              <el-option label="收集中" value="collecting" />
-              <el-option label="已关闭" value="closed" />
               <el-option label="进行中" value="ongoing" />
               <el-option label="已完成" value="finished" />
             </el-select>
@@ -269,17 +266,11 @@ const resetFilters = () => {
 }
 
 const statusLabels = {
-    draft: '草稿',
-    collecting: '收集中',
-    closed: '已关闭',
     ongoing: '进行中',
     finished: '已完成'
 }
 
 const statusTypes = {
-    draft: 'info',
-    collecting: 'warning',
-    closed: 'info',
     ongoing: 'warning',
     finished: 'success'
 }

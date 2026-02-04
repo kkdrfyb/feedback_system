@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
+import json
 
 class UserBase(BaseModel):
     name: str
@@ -17,6 +18,7 @@ class UserLogin(BaseModel):
 
 class User(UserBase):
     id: int
+    username: str
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,6 +27,21 @@ class ItemBase(BaseModel):
     description: Optional[str] = ""
     must_feedback: bool = True
     deadline: datetime
+    attachments: Optional[List[Any]] = None
+
+    @field_validator("attachments", mode="before")
+    @classmethod
+    def parse_attachments(cls, value):
+        if value is None or value == "":
+            return None
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return None
+        return value
 
 class ItemCreate(ItemBase):
     creator_id: int
@@ -36,6 +53,15 @@ class Item(ItemBase):
     creator_id: int
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+class ItemUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    must_feedback: Optional[bool] = None
+    deadline: Optional[datetime] = None
+    status: Optional[str] = None
+    attachments: Optional[List[Any]] = None
+    user_ids: Optional[List[int]] = None
 
 class TodoItem(Item):
     item_user_id: int

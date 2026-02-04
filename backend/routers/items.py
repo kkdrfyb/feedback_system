@@ -149,7 +149,8 @@ def read_item(item_id: int, db: Session = Depends(get_db)):
             "created_at": fb.created_at if fb else None # Also return feedback creation time
         })
         
-    return {"item": item, "feedbacks": participants}
+    item_data = schemas.Item.model_validate(item).model_dump()
+    return {"item": item_data, "feedbacks": participants}
 
 @router.post("/items", response_model=schemas.Item)
 async def create_item(
@@ -160,8 +161,11 @@ async def create_item(
     creator_id: int = Form(...),
     user_ids: str = Form(...), 
     files: List[UploadFile] = File(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
+    if current_user.role != "admin" and creator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to create item for other users")
     # 处理文件上传
     attachment_list = []
     if files:
@@ -196,12 +200,38 @@ async def create_item(
     return db_item
 
 @router.put("/items/{item_id}", response_model=schemas.Item)
-def update_item(item_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)):
+def update_item(item_id: int, item: schemas.ItemUpdate, db: Session = Depends(get_db)):
     db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
-    for key, value in item.model_dump(exclude={'user_ids'}).items():
+    update_data = item.model_dump(exclude_unset=True, exclude={"user_ids"})
+    if "attachments" in update_data:
+        update_data["attachments"] = json.dumps(update_data["attachments"]) if update_data["attachments"] else None
+    for key, value in update_data.items():
         setattr(db_item, key, value)
+    if item.user_ids is not None:
+        existing = db.query(models.ItemUser).filter(models.ItemUser.item_id == item_id).all()
+        existing_user_ids = {iu.user_id for iu in existing}
+        new_user_ids = set(item.user_ids)
+        to_add = new_user_ids - existing_user_ids
+        to_remove = existing_user_ids - new_user_ids
+
+        for user_id in to_add:
+            db.add(models.ItemUser(item_id=item_id, user_id=user_id))
+
+        if to_remove:
+            remove_item_users = db.query(models.ItemUser).filter(
+                models.ItemUser.item_id == item_id,
+                models.ItemUser.user_id.in_(to_remove)
+            ).all()
+            remove_ids = [iu.id for iu in remove_item_users]
+            if remove_ids:
+                db.query(models.Feedback).filter(
+                    models.Feedback.item_user_id.in_(remove_ids)
+                ).delete(synchronize_session=False)
+                db.query(models.ItemUser).filter(
+                    models.ItemUser.id.in_(remove_ids)
+                ).delete(synchronize_session=False)
     db.commit()
     db.refresh(db_item)
     return db_item

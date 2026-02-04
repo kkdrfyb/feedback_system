@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timezone
 try:
     from .. import models, schemas
@@ -96,9 +96,17 @@ def update_feedback(feedback_id: int, payload: schemas.FeedbackBase, db: Session
     return db_feedback
 
 @router.get("/todos", response_model=List[schemas.TodoItem])
-def get_todos(user_id: int, db: Session = Depends(get_db)):
+def get_todos(
+    user_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
     # 获取待办事项并附带 item_user_id
-    item_users = db.query(models.ItemUser).filter(models.ItemUser.user_id == user_id, models.ItemUser.feedback_status=="pending").all()
+    target_user_id = user_id or current_user.id
+    item_users = db.query(models.ItemUser).filter(
+        models.ItemUser.user_id == target_user_id,
+        models.ItemUser.feedback_status == "pending"
+    ).all()
     results = []
     for iu in item_users:
         item = db.query(models.Item).filter(models.Item.id == iu.item_id).first()

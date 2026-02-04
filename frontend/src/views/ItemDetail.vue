@@ -96,6 +96,9 @@ const finishedCount = computed(() => feedbacks.value.filter(f => f.content).leng
 
 const attachmentsList = computed(() => {
     if (!item.value.attachments) return []
+    if (Array.isArray(item.value.attachments)) {
+        return item.value.attachments
+    }
     try {
         return JSON.parse(item.value.attachments)
     } catch (e) {
@@ -164,9 +167,6 @@ function exportData() {
 }
 
 const statusLabels = {
-    draft: '草稿',
-    collecting: '收集中',
-    closed: '已关闭',
     ongoing: '进行中',
     finished: '已归档'
 }
@@ -216,9 +216,6 @@ const getStatusLabel = (status) => statusLabels[status] || status || '-'
 
 .status-badge.ongoing { background: rgba(var(--primary), 0.1); color: rgb(var(--primary)); }
 .status-badge.finished { background: rgba(103, 194, 58, 0.1); color: #67c23a; }
-.status-badge.collecting { background: rgba(var(--primary), 0.1); color: rgb(var(--primary)); }
-.status-badge.draft { background: rgba(148, 163, 184, 0.2); color: #64748b; }
-.status-badge.closed { background: rgba(148, 163, 184, 0.2); color: #64748b; }
 
 .item-desc {
   font-size: 1rem;
