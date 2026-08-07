@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feedback System Maintainer"
+  short_description: "Securely maintain and evolve this feedback system"
+  default_prompt: "Use $feedbacksystem-maintainer to harden APIs, enforce authz, and ship tested changes for this repository."

@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-multipart
+openpyxl
+apscheduler
+python-jose
+passlib[bcrypt]
+pytest
+httpx
+bcrypt
+requests
+Faker
+alembic

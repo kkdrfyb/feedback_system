@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>事项反馈系统（IFMS）｜项目说明</title>
+  <style>
+    :root{--ink:#172033;--muted:#5b6880;--line:#dfe6ef;--bg:#f4f7fb;--card:#fff;--brand:#1769e0;--mint:#e9f8f1;--warn:#fff6df}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "Microsoft YaHei","Segoe UI",sans-serif}.hero{background:linear-gradient(120deg,#102a55,#1769e0);color:#fff;padding:54px max(24px,calc((100vw - 1100px)/2)) 48px}.hero h1{margin:0 0 8px;font-size:36px}.hero p{margin:0;max-width:720px;opacity:.88}.badge{display:inline-block;margin:18px 8px 0 0;padding:3px 10px;border:1px solid #ffffff55;border-radius:999px;font-size:13px}.layout{max-width:1100px;margin:30px auto;padding:0 24px;display:grid;grid-template-columns:210px 1fr;gap:26px}nav{position:sticky;top:20px;align-self:start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}nav a{display:block;padding:7px 9px;color:var(--muted);text-decoration:none;border-radius:6px}nav a:hover{background:#eef5ff;color:var(--brand)}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:26px;margin-bottom:18px;box-shadow:0 4px 12px #17203308}h2{font-size:22px;margin:0 0 14px}.note{border-left:4px solid var(--brand);background:#eef5ff;padding:12px 14px;border-radius:0 8px 8px 0}.warning{border-left-color:#d38b00;background:var(--warn)}.ok{border-left-color:#0e9f6e;background:var(--mint)}table{border-collapse:collapse;width:100%;margin:12px 0}th,td{padding:10px 11px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{background:#f0f4f9;font-weight:700}code{padding:2px 5px;background:#eef2f7;border-radius:4px;color:#273a5a}pre{overflow:auto;padding:14px;background:#101b2e;color:#d8e7ff;border-radius:9px;line-height:1.45}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.feature{border:1px solid var(--line);border-radius:9px;padding:14px}.feature b{display:block;margin-bottom:3px}a{color:var(--brand)}@media(max-width:760px){.hero{padding:34px 24px}.hero h1{font-size:28px}.layout{display:block;margin:18px auto}nav{display:none}.grid{grid-template-columns:1fr}.card{padding:20px}}
+  </style>
+</head>
+<body>
+  <header class="hero"><h1>事项反馈系统 <small>IFMS</small></h1><p>内部部署的轻量事项收集、多人反馈与跟踪系统。本文根据当前代码、配置和已确认需求整理。</p><span class="badge">FastAPI + Vue 3</span><span class="badge">SQLite + Alembic</span><span class="badge">JWT Bearer Token</span></header>
+  <div class="layout"><nav><a href="#overview">系统定位</a><a href="#stack">技术配置</a><a href="#features">功能范围</a><a href="#access">角色权限</a><a href="#run">本地启动</a><a href="#docs">相关文档</a></nav><main>
+    <section class="card" id="overview"><h2>系统定位</h2><p>支持“发起事项 → 指派参与人 → 收集反馈 → 汇总跟踪”的内部流程，用于替代微信群、Excel 和邮件中的重复催收及人工统计。</p><div class="note ok">系统已正式包含 Excel 表格协作：上传模板、在线填写单元格、自动保存并导出汇总表。所有登录用户均可查看和导出表格。</div></section>
+    <section class="card" id="stack"><h2>技术与运行配置</h2><table><thead><tr><th>层级</th><th>当前配置</th></tr></thead><tbody><tr><td>后端</td><td>Python、FastAPI、SQLAlchemy、Alembic、SQLite</td></tr><tr><td>前端</td><td>Vue 3、Vite、Element Plus、Axios</td></tr><tr><td>鉴权</td><td>JWT Bearer Token，默认有效期 60 分钟</td></tr><tr><td>数据库</td><td><code>backend/feedback.db</code></td></tr><tr><td>附件</td><td>项目根目录 <code>uploads/</code>，当前经 <code>/uploads/*</code> 静态访问</td></tr><tr><td>地址</td><td>前端 <code>http://localhost:5173</code>；API <code>http://127.0.0.1:8000</code>；文档 <code>/docs</code></td></tr></tbody></table><div class="note warning">生产环境必须配置 <code>JWT_SECRET_KEY</code>；未设置时会使用仅适合本地开发的默认密钥。</div></section>
+    <section class="card" id="features"><h2>已实现能力</h2><div class="grid"><div class="feature"><b>用户与认证</b>管理员可管理、删除、导出用户；登录用户可取得用于指派与私有分组的安全用户目录。</div><div class="feature"><b>事项管理</b>所有登录用户可创建自己的事项；支持附件、参与人分配、筛选、详情、更新、删除与 CSV 导出。</div><div class="feature"><b>反馈闭环</b>个人待办、提交/修改反馈；所有参与人完成后自动结束事项。</div><div class="feature"><b>分组与统计</b>组织分组和私有个人分组；个人分组仅创建者与管理员可见；管理员页默认折叠到“用户分组”。</div><div class="feature"><b>表格协作</b>上传 <code>.xlsx</code>（10 MB、最多 200 行）、网页编辑、全员查看与导出 Excel。</div><div class="feature"><b>运维工具</b>Alembic 迁移、健康检查、离线打包；不提供邮件、企业微信等外部提醒。</div></div></section>
+    <section class="card" id="access"><h2>角色与权限</h2><table><thead><tr><th>角色</th><th>主要权限</th></tr></thead><tbody><tr><td><code>admin</code></td><td>用户、日志、全量事项/统计/导出；管理全部个人和组织分组；编辑、删除所有表格。</td></tr><tr><td><code>creator</code> / <code>feedbacker</code></td><td>创建自己的事项、选择参与人；仅查看本人相关事项；创建和维护自己的个人分组，其他人的个人分组不展示；查看、导出协作表格。</td></tr></tbody></table><div class="note">服务端根据 JWT 中的当前用户执行归属校验；前端菜单只负责展示，所有登录用户均可打开“新建事项”和“分组管理”。</div></section>
+    <section class="card" id="run"><h2>本地启动</h2><pre>pip install -r requirements.txt
+cd backend
+alembic -c alembic.ini upgrade head
+cd ..
+python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+
+# 另一终端
+cd frontend
+npm install
+npm run dev</pre><p>空库可运行 <code>python backend/init_users.py</code> 生成演示用户。该脚本会创建 <code>admin / 123</code>，仅可用于本地演示，首次使用后应立即改密或改用 CSV 导入。</p></section>
+    <section class="card" id="docs"><h2>相关文档</h2><p>详细的已确认需求与代码问题请见 <a href="事项反馈系统_最终需求文档.html">需求基线与问题清单</a>。</p></section>
+  </main></div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+# Python runtime and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Frontend dependencies and generated distribution
+frontend/node_modules/
+frontend/dist/
+
+# Local configuration and database data
+.env
+.env.*
+.reasonix/
+backend/feedback.db
+*.db-journal
+
+# Runtime uploads, exports, and logs (keep the checked-in template)
+uploads/*
+!uploads/template.txt
+backend/uploads/
+logs/
+*_export.csv
+users_export.csv
+
+# Offline build output
+offline_bundle/

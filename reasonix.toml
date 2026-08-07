@@ -1,0 +1,2 @@
+[permissions]
+allow = ["Bash(cd /d/python/feedbacksystem && python -m pytest -q 2>&1 | tail -30)", "Bash(cd /d/python/feedbacksystem && python -m pip install -r backend/requirements.txt 2>&1 | tail -5)"]
